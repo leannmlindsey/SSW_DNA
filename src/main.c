@@ -72,123 +72,123 @@ static void ssw_write (s_align* a,
 			int8_t strand,	// 0: forward aligned ; 1: reverse complement aligned
 			int8_t sam) {	// 0: Blast like output; 1: Sam format output
 
-	int32_t mismatch;
-	if (sam == 0) {	// Blast like output
-		fprintf(stdout, "target_name: %s\nquery_name: %s\noptimal_alignment_score: %d\t", ref_seq->name.s, read->name.s, a->score1);
-		if (a->score2 > 0) fprintf(stdout, "suboptimal_alignment_score: %d\t", a->score2);
-		if (strand == 0) fprintf(stdout, "strand: +\t");
-		else fprintf(stdout, "strand: -\t");
-		if (a->ref_begin1 + 1) fprintf(stdout, "target_begin: %d\t", a->ref_begin1 + 1);
-		fprintf(stdout, "target_end: %d\t", a->ref_end1 + 1);
-		if (a->read_begin1 + 1) fprintf(stdout, "query_begin: %d\t", a->read_begin1 + 1);
-		fprintf(stdout, "query_end: %d\n\n", a->read_end1 + 1);
-		if (a->cigar) {
-			int32_t c = 0, left = 0, e = 0, qb = a->ref_begin1, pb = a->read_begin1;
-			uint32_t i;
-			while (e < a->cigarLen || left > 0) {
-				int32_t count = 0;
-				int32_t q = qb;
-				int32_t p = pb;
-				fprintf(stdout, "Target: %8d    ", q + 1);
-				for (c = e; c < a->cigarLen; ++c) {
-					char letter = cigar_int_to_op(a->cigar[c]);
-					uint32_t length = cigar_int_to_len(a->cigar[c]);
-					uint32_t l = (count == 0 && left > 0) ? left: length;
-					for (i = 0; i < l; ++i) {
-						if (letter == 'I') fprintf(stdout, "-");
-						else {
-							fprintf(stdout, "%c", *(ref_seq->seq.s + q));
-							++ q;
-						}
-						++ count;
-						if (count == 60) goto step2;
-					}
-				}
-step2:
-				fprintf(stdout, "    %d\n                    ", q);
-				q = qb;
-				count = 0;
-				for (c = e; c < a->cigarLen; ++c) {
-					char letter = cigar_int_to_op(a->cigar[c]);
-					uint32_t length = cigar_int_to_len(a->cigar[c]);
-					uint32_t l = (count == 0 && left > 0) ? left: length;
-					for (i = 0; i < l; ++i){
-						if (letter == 'M') {
-							if (table[(int)*(ref_seq->seq.s + q)] == table[(int)*(read_seq + p)])fprintf(stdout, "|");
-							else fprintf(stdout, "*");
-							++q;
-							++p;
-						} else {
-							fprintf(stdout, " ");
-							if (letter == 'I') ++p;
-							else ++q;
-						}
-						++ count;
-						if (count == 60) {
-							qb = q;
-							goto step3;
-						}
-					}
-				}
-step3:
-				p = pb;
-				fprintf(stdout, "\nQuery:  %8d    ", p + 1);
-				count = 0;
-				for (c = e; c < a->cigarLen; ++c) {
-					char letter = cigar_int_to_op(a->cigar[c]);
-					uint32_t length = cigar_int_to_len(a->cigar[c]);
-					uint32_t l = (count == 0 && left > 0) ? left: length;
-					for (i = 0; i < l; ++i) {
-						if (letter == 'D') fprintf(stdout, "-");
-						else {
-							fprintf(stdout, "%c", *(read_seq + p));
-							++p;
-						}
-						++ count;
-						if (count == 60) {
-							pb = p;
-							left = l - i - 1;
-							e = (left == 0) ? (c + 1) : c;
-							goto end;
-						}
-					}
-				}
-				e = c;
-				left = 0;
-end:
-				fprintf(stdout, "    %d\n\n", p);
-			}
-		}
-	}else {	// Sam format output
-		fprintf(stdout, "%s\t", read->name.s);
-		if (a->score1 == 0) fprintf(stdout, "4\t*\t0\t255\t*\t*\t0\t0\t*\t*\n");
-		else {
-			int32_t c, p;
-			uint32_t mapq = -4.343 * log(1 - (double)abs(a->score1 - a->score2)/(double)a->score1);
-			mapq = (uint32_t) (mapq + 4.99);
-			mapq = mapq < 254 ? mapq : 254;
-			if (strand) fprintf(stdout, "16\t");
-			else fprintf(stdout, "0\t");
-			fprintf(stdout, "%s\t%d\t%d\t", ref_seq->name.s, a->ref_begin1 + 1, mapq);
-			mismatch = mark_mismatch(a->ref_begin1, a->read_begin1, a->read_end1, ref_num, read_num, read->seq.l, &a->cigar, &a->cigarLen);
-			for (c = 0; c < a->cigarLen; ++c) {
-				char letter = cigar_int_to_op(a->cigar[c]);
-				uint32_t length = cigar_int_to_len(a->cigar[c]);
-				fprintf(stdout, "%lu%c", (unsigned long)length, letter);
-			}
-			fprintf(stdout, "\t*\t0\t0\t");
-			fprintf(stdout, "%s", read_seq);
-			fprintf(stdout, "\t");
-			if (read->qual.s && strand) {
-				for (p = read->qual.l - 1; p >= 0; --p) fprintf(stdout, "%c", read->qual.s[p]);
-			}else if (read->qual.s) fprintf (stdout, "%s", read->qual.s);
-			else fprintf(stdout, "*");
-			fprintf(stdout, "\tAS:i:%d", a->score1);
-			fprintf(stdout,"\tNM:i:%d\t", mismatch);
-			if (a->score2 > 0) fprintf(stdout, "ZS:i:%d\n", a->score2);
-			else fprintf(stdout, "\n");
-		}
-	}
+	//int32_t mismatch;
+	//if (sam == 0) {	// Blast like output
+	//	fprintf(stdout, "target_name: %s\nquery_name: %s\noptimal_alignment_score: %d\t", ref_seq->name.s, read->name.s, a->score1);
+	//	if (a->score2 > 0) fprintf(stdout, "suboptimal_alignment_score: %d\t", a->score2);
+	//	if (strand == 0) fprintf(stdout, "strand: +\t");
+	//	else fprintf(stdout, "strand: -\t");
+	//	if (a->ref_begin1 + 1) fprintf(stdout, "target_begin: %d\t", a->ref_begin1 + 1);
+	//	fprintf(stdout, "target_end: %d\t", a->ref_end1 + 1);
+	//	if (a->read_begin1 + 1) fprintf(stdout, "query_begin: %d\t", a->read_begin1 + 1);
+	//	fprintf(stdout, "query_end: %d\n\n", a->read_end1 + 1);
+	//	if (a->cigar) {
+	//		int32_t c = 0, left = 0, e = 0, qb = a->ref_begin1, pb = a->read_begin1;
+	//		uint32_t i;
+	//		while (e < a->cigarLen || left > 0) {
+	//			int32_t count = 0;
+	//			int32_t q = qb;
+	//			int32_t p = pb;
+	//			fprintf(stdout, "Target: %8d    ", q + 1);
+	//			for (c = e; c < a->cigarLen; ++c) {
+	//				char letter = cigar_int_to_op(a->cigar[c]);
+	//				uint32_t length = cigar_int_to_len(a->cigar[c]);
+	//				uint32_t l = (count == 0 && left > 0) ? left: length;
+	//				for (i = 0; i < l; ++i) {
+	//					if (letter == 'I') fprintf(stdout, "-");
+	//					else {
+	//						fprintf(stdout, "%c", *(ref_seq->seq.s + q));
+	//						++ q;
+	//					}
+	//					++ count;
+	//					if (count == 60) goto step2;
+	//				}
+	//			}
+//step2:
+	//			fprintf(stdout, "    %d\n                    ", q);
+	//			q = qb;
+	//			count = 0;
+	//			for (c = e; c < a->cigarLen; ++c) {
+	//				char letter = cigar_int_to_op(a->cigar[c]);
+	//				uint32_t length = cigar_int_to_len(a->cigar[c]);
+	//				uint32_t l = (count == 0 && left > 0) ? left: length;
+	//				for (i = 0; i < l; ++i){
+	//					if (letter == 'M') {
+	//						if (table[(int)*(ref_seq->seq.s + q)] == table[(int)*(read_seq + p)])fprintf(stdout, "|");
+	//						else fprintf(stdout, "*");
+	//						++q;
+	//						++p;
+	//					} else {
+	//						fprintf(stdout, " ");
+	//						if (letter == 'I') ++p;
+	//						else ++q;
+	//					}
+	//					++ count;
+	//					if (count == 60) {
+	//						qb = q;
+	//						goto step3;
+	//					}
+	//				}
+	//			}
+//step3:
+	//			p = pb;
+	//			fprintf(stdout, "\nQuery:  %8d    ", p + 1);
+	//			count = 0;
+	//			for (c = e; c < a->cigarLen; ++c) {
+	//				char letter = cigar_int_to_op(a->cigar[c]);
+	//				uint32_t length = cigar_int_to_len(a->cigar[c]);
+	//				uint32_t l = (count == 0 && left > 0) ? left: length;
+	//				for (i = 0; i < l; ++i) {
+	//					if (letter == 'D') fprintf(stdout, "-");
+	//					else {
+	//						fprintf(stdout, "%c", *(read_seq + p));
+	//						++p;
+	//					}
+	//					++ count;
+	//					if (count == 60) {
+	//						pb = p;
+	//						left = l - i - 1;
+	//						e = (left == 0) ? (c + 1) : c;
+	//						goto end;
+	//					}
+	//				}
+	//			}
+	//			e = c;
+	//			left = 0;
+//end:
+	//			fprintf(stdout, "    %d\n\n", p);
+	//		}
+	//	}
+	//}else {	// Sam format output
+	//	fprintf(stdout, "%s\t", read->name.s);
+	//	if (a->score1 == 0) fprintf(stdout, "4\t*\t0\t255\t*\t*\t0\t0\t*\t*\n");
+	//	else {
+	//		int32_t c, p;
+	//		uint32_t mapq = -4.343 * log(1 - (double)abs(a->score1 - a->score2)/(double)a->score1);
+	//		mapq = (uint32_t) (mapq + 4.99);
+	//		mapq = mapq < 254 ? mapq : 254;
+	//		if (strand) fprintf(stdout, "16\t");
+	//		else fprintf(stdout, "0\t");
+	//		fprintf(stdout, "%s\t%d\t%d\t", ref_seq->name.s, a->ref_begin1 + 1, mapq);
+	//		mismatch = mark_mismatch(a->ref_begin1, a->read_begin1, a->read_end1, ref_num, read_num, read->seq.l, &a->cigar, &a->cigarLen);
+	//		for (c = 0; c < a->cigarLen; ++c) {
+	//			char letter = cigar_int_to_op(a->cigar[c]);
+	//			uint32_t length = cigar_int_to_len(a->cigar[c]);
+	//			fprintf(stdout, "%lu%c", (unsigned long)length, letter);
+	//		}
+	//		fprintf(stdout, "\t*\t0\t0\t");
+	//		fprintf(stdout, "%s", read_seq);
+	//		fprintf(stdout, "\t");
+	//		if (read->qual.s && strand) {
+	//			for (p = read->qual.l - 1; p >= 0; --p) fprintf(stdout, "%c", read->qual.s[p]);
+	//		}else if (read->qual.s) fprintf (stdout, "%s", read->qual.s);
+	//		else fprintf(stdout, "*");
+	//		fprintf(stdout, "\tAS:i:%d", a->score1);
+	//		fprintf(stdout,"\tNM:i:%d\t", mismatch);
+	//		if (a->score2 > 0) fprintf(stdout, "ZS:i:%d\n", a->score2);
+	//		else fprintf(stdout, "\n");
+	//	}
+	//}
 }
 
 int main (int argc, char * const argv[]) {
@@ -420,7 +420,8 @@ int main (int argc, char * const argv[]) {
 
 		ref_fp = gzopen(argv[optind], "r");
 		ref_seq = kseq_init(ref_fp);
-		while (kseq_read(ref_seq) >= 0) {
+		#pragma omp parallel for
+		for (long unsigned i = 0; i < kseq_read(ref_seq); i++) {
 			s_align* result, *result_rc = 0;
 			int32_t refLen = ref_seq->seq.l;
 			int8_t flag = 0;
@@ -455,6 +456,8 @@ int main (int argc, char * const argv[]) {
 		kseq_destroy(ref_seq);
 		gzclose(ref_fp);
 	}
+	#pragma omp barrier 
+	
 	end = clock();
 	cpu_time = ((float) (end - start)) / CLOCKS_PER_SEC;
 	fprintf(stderr, "CPU time: %f seconds\n", cpu_time);
